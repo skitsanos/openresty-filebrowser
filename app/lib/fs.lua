@@ -70,14 +70,6 @@ function fs.isFile(name)
 end
 
 function fs.isDir(path)
-    --[[if type(name) ~= "string" then
-        return false
-    end
-
-    local cd = localfilesystem.currentdir()
-    local is = localfilesystem.chdir(name) and true or false
-    localfilesystem.chdir(cd)
-    return is]]
     if (localfilesystem.attributes(path, 'mode') == 'directory') then
         return true
     else
@@ -92,10 +84,19 @@ function fs.list(path)
         if (file ~= '.') and (file ~= '..') then
             local fullPath = path .. '/' .. file
 
-            files[counter] = {
+            local _mode = localfilesystem.attributes(fullPath, "mode")
+
+            local item = {
                 item = file,
-                mode = localfilesystem.attributes(fullPath, "mode")
+                mode = _mode,
+                timestamp = localfilesystem.attributes(fullPath, "modification")
             }
+
+            if (_mode == 'file') then
+                item.size = localfilesystem.attributes(fullPath, "size")
+            end
+
+            files[counter] = item
             counter = counter + 1
         end
     end
@@ -124,7 +125,7 @@ function fs.baseName(path)
     local handle = io.popen('dirname ' .. path)
     local result = handle:read("*a")
     handle:close()
-    return result:gsub('\n','')
+    return result:gsub('\n', '')
 end
 
 function fs.move(source, target)
