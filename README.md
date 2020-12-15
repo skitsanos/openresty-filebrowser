@@ -93,7 +93,8 @@ with payload
   "target": "prod"
 }
 ```
- 
+
+It works exactly the same when you need to rename the file.
 
 ### Deleting file or directory
 
