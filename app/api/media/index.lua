@@ -23,8 +23,8 @@ end
 local _method = ngx.var.request_method
 local _path = ngx.var.pathRequested
 
-if (_path == '') then
-    _path = '/'
+if (not _path:match('^/')) then
+    _path = '/' .. _path
 end
 
 local filePath = ngx.var.mediaPath .. _path
