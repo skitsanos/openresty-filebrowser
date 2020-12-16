@@ -73,6 +73,13 @@ local runByMethod = {
                     ngx.say(response.error('Failed to create path'))
                     ngx.exit(500)
                 end
+
+                if (ngx.var.http_content_type == nil) then
+                    ngx.status = 201
+                    ngx.say(response.result(makeDirResult))
+                    ngx.exit(201)
+                    return;
+                end
             end
 
             -- check content type
