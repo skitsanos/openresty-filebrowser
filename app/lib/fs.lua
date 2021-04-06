@@ -2,13 +2,16 @@
     Files System Operations
 
     @author skitsanos
-    @version 1.0
+    @version 1.1
 
     Ref: https://docs.coronalabs.com/guide/data/LFS/index.html#adding-directories
 ]] --
 
 rawset(_G, 'lfs', false)
 local localfilesystem = require('lfs')
+
+local restyString = require('resty.string')
+local restySha256 = require('resty.sha256')
 
 local fs = {}
 
@@ -18,6 +21,37 @@ end
 
 function fs.mode(path)
     return localfilesystem.attributes(path, 'mode')
+end
+
+function fs.hash(path)
+    local sha256 = restySha256:new()
+    sha256:update(path)
+    local hash = sha256:final()
+    return restyString.to_hex(hash)
+end
+
+-- url:match "[^/]+$" -- To match file name
+-- url:match "[^.]+$" -- To match file extension
+-- url:match "([^/]-([^.]+))$" -- To match file name + file extension
+function fs.fileName(path)
+    --return path:match("^.+/(.+)$")
+    return path:match("([^/]-([^.]+))$")
+end
+
+function fs.getExtension(path)
+    return fs.fileName(path):match("^.+(%..+)$")
+end
+
+function fs.read(path)
+    local _, res = pcall(io.open, path, "r")
+    if (res == nil) then
+        return nil
+    end
+
+    local t = res:read("*all")
+    res:close()
+
+    return t
 end
 
 function fs.split(inputstr, sep)
@@ -116,7 +150,7 @@ function fs.remove(path)
         os.execute('rm -r ' .. path)
         return true
     elseif (mode == 'file') then
-        os.execute("rm -r " .. path)
+        os.execute('rm "' .. path .. '"')
         return true
     end
 end
@@ -133,7 +167,7 @@ function fs.move(source, target)
     if (mode == nil) then
         return nil
     elseif (mode == 'directory' or mode == 'file') then
-        os.execute('mv ' .. source .. ' ' .. target)
+        os.execute('mv "' .. source .. '" ' .. target)
         return true
     else
         return false
